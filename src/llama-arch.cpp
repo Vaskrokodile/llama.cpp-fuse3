@@ -621,11 +621,11 @@ static const std::map<llm_tensor, const char *> LLM_TENSOR_NAMES = {
     { LLM_TENSOR_DSPARK_MARKOV_W1,                       "markov_w1" },
     { LLM_TENSOR_DSPARK_MARKOV_W2,                       "markov_w2" },
     { LLM_TENSOR_DSPARK_CONF_PROJ,                       "conf_proj" },
-    { LLM_TENSOR_FUSE3_ROUTER,                           "fuse3_router" },
-    { LLM_TENSOR_FUSE3_EXPERT_SCALE,                     "fuse3_expert_scale" },
-    { LLM_TENSOR_FUSE3_EXPERTS_GATE,                     "fuse3_experts.gate" },
-    { LLM_TENSOR_FUSE3_EXPERTS_UP,                       "fuse3_experts.up" },
-    { LLM_TENSOR_FUSE3_EXPERTS_DOWN,                     "fuse3_experts.down" },
+    { LLM_TENSOR_FUSE3_ROUTER,                           "blk.%d.fuse3_router" },
+    { LLM_TENSOR_FUSE3_EXPERT_SCALE,                     "blk.%d.fuse3_expert_scale" },
+    { LLM_TENSOR_FUSE3_EXPERTS_GATE,                     "blk.%d.fuse3_experts.gate" },
+    { LLM_TENSOR_FUSE3_EXPERTS_UP,                       "blk.%d.fuse3_experts.up" },
+    { LLM_TENSOR_FUSE3_EXPERTS_DOWN,                     "blk.%d.fuse3_experts.down" },
 };
 
 // declare information about the model weight tensors:
