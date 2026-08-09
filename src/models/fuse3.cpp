@@ -110,12 +110,12 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
         cb(scores, "fuse3.scores", il);
 
         // Normalize scores across experts
+        // sqrt(softplus(x)) > 0 always, so sum > 0, no epsilon needed
         ggml_tensor * scores_sum = ggml_sum_rows(ctx0, scores);
-        scores = ggml_div(ctx0, scores, ggml_add(ctx0, scores_sum, ggml_new_f32(ctx0, 1e-8f)));
+        scores = ggml_div(ctx0, scores, scores_sum);
 
         // Compute all experts, weight by scores
-        ggml_tensor * expert_sum = ggml_dup_tensor(ctx0, cur);
-        ggml_set_zero(expert_sum);
+        ggml_tensor * expert_sum = nullptr;
 
         for (int e = 0; e < n_exp; ++e) {
             // Extract expert e's weights via 2D views
@@ -145,7 +145,11 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
             ggml_tensor * score_e = ggml_view_2d(ctx0, scores, 1, scores->ne[1], scores->nb[1], e * scores->nb[0]);
             expert_out = ggml_mul(ctx0, expert_out, score_e);
 
-            expert_sum = ggml_add(ctx0, expert_sum, expert_out);
+            if (expert_sum == nullptr) {
+                expert_sum = expert_out;
+            } else {
+                expert_sum = ggml_add(ctx0, expert_sum, expert_out);
+            }
         }
 
         cb(expert_sum, "fuse3.expert_sum", il);
