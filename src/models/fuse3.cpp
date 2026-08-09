@@ -142,8 +142,7 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
             ggml_tensor * expert_out = ggml_mul_mat(ctx0, down_e, act);
 
             // Weight by score for this expert
-            ggml_tensor * score_e = ggml_view_1d(ctx0, scores, 1, e * scores->nb[0]);
-            score_e = ggml_reshape_2d(ctx0, score_e, 1, scores->ne[1]);
+            ggml_tensor * score_e = ggml_view_2d(ctx0, scores, 1, scores->ne[1], scores->nb[1], e * scores->nb[0]);
             expert_out = ggml_mul(ctx0, expert_out, score_e);
 
             expert_sum = ggml_add(ctx0, expert_sum, expert_out);
