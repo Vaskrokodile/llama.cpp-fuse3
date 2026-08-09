@@ -1103,6 +1103,12 @@ class MODEL_TENSOR(IntEnum):
     A_QF_FFN_UP            = auto()
     A_QF_FFN_DOWN          = auto()
     A_QF_FFN_NORM          = auto()
+    # fuse3 expert tensors
+    FUSE3_ROUTER           = auto()
+    FUSE3_EXPERT_SCALE     = auto()
+    FUSE3_EXPERTS_GATE     = auto()
+    FUSE3_EXPERTS_UP       = auto()
+    FUSE3_EXPERTS_DOWN     = auto()
 
 
 MODEL_ARCH_NAMES: dict[MODEL_ARCH, str] = {
@@ -1769,6 +1775,11 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.DSPARK_MARKOV_W2:          "markov_w2",
     MODEL_TENSOR.DSPARK_CONF_PROJ:          "conf_proj",
     MODEL_TENSOR.D2T:                       "d2t",
+    MODEL_TENSOR.FUSE3_ROUTER:              "blk.{bid}.fuse3_router",
+    MODEL_TENSOR.FUSE3_EXPERT_SCALE:        "blk.{bid}.fuse3_expert_scale",
+    MODEL_TENSOR.FUSE3_EXPERTS_GATE:        "blk.{bid}.fuse3_experts.gate",
+    MODEL_TENSOR.FUSE3_EXPERTS_UP:          "blk.{bid}.fuse3_experts.up",
+    MODEL_TENSOR.FUSE3_EXPERTS_DOWN:        "blk.{bid}.fuse3_experts.down",
 }
 
 MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
@@ -4390,6 +4401,11 @@ MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
         MODEL_TENSOR.ATTN_K,
         MODEL_TENSOR.ATTN_V,
         MODEL_TENSOR.ATTN_OUT,
+        MODEL_TENSOR.FUSE3_ROUTER,
+        MODEL_TENSOR.FUSE3_EXPERT_SCALE,
+        MODEL_TENSOR.FUSE3_EXPERTS_GATE,
+        MODEL_TENSOR.FUSE3_EXPERTS_UP,
+        MODEL_TENSOR.FUSE3_EXPERTS_DOWN,
     ],
     MODEL_ARCH.SMALLTHINKER: [
         MODEL_TENSOR.TOKEN_EMBD,

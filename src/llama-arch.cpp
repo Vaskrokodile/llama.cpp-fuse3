@@ -621,6 +621,11 @@ static const std::map<llm_tensor, const char *> LLM_TENSOR_NAMES = {
     { LLM_TENSOR_DSPARK_MARKOV_W1,                       "markov_w1" },
     { LLM_TENSOR_DSPARK_MARKOV_W2,                       "markov_w2" },
     { LLM_TENSOR_DSPARK_CONF_PROJ,                       "conf_proj" },
+    { LLM_TENSOR_FUSE3_ROUTER,                           "fuse3_router" },
+    { LLM_TENSOR_FUSE3_EXPERT_SCALE,                     "fuse3_expert_scale" },
+    { LLM_TENSOR_FUSE3_EXPERTS_GATE,                     "fuse3_experts.gate" },
+    { LLM_TENSOR_FUSE3_EXPERTS_UP,                       "fuse3_experts.up" },
+    { LLM_TENSOR_FUSE3_EXPERTS_DOWN,                     "fuse3_experts.down" },
 };
 
 // declare information about the model weight tensors:
@@ -879,6 +884,12 @@ static const std::map<llm_tensor, llm_tensor_info> LLM_TENSOR_INFOS = {
     {LLM_TENSOR_DSPARK_MARKOV_W1,           {LLM_TENSOR_LAYER_OUTPUT,    GGML_OP_GET_ROWS}},
     {LLM_TENSOR_DSPARK_MARKOV_W2,           {LLM_TENSOR_LAYER_OUTPUT,    GGML_OP_MUL_MAT}},
     {LLM_TENSOR_DSPARK_CONF_PROJ,           {LLM_TENSOR_LAYER_OUTPUT,    GGML_OP_MUL_MAT}},
+    // fuse3
+    {LLM_TENSOR_FUSE3_ROUTER,               {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_FUSE3_EXPERT_SCALE,         {LLM_TENSOR_LAYER_REPEATING, GGML_OP_NONE}},
+    {LLM_TENSOR_FUSE3_EXPERTS_GATE,         {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_FUSE3_EXPERTS_UP,           {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
+    {LLM_TENSOR_FUSE3_EXPERTS_DOWN,         {LLM_TENSOR_LAYER_REPEATING, GGML_OP_MUL_MAT}},
 };
 
 LLM_KV::LLM_KV(llm_arch arch, const char * suffix) : arch(arch), suffix(suffix) {}
