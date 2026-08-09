@@ -100,6 +100,17 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
         const auto & fl = g_fuse3_layers[il];
         const int n_exp = fl.n_experts;
 
+        fprintf(stderr, "fuse3: layer %d, n_exp=%d, router=%p gate=%p up=%p down=%p scale=%p\n",
+                il, n_exp, (void*)fl.router, (void*)fl.gate, (void*)fl.up, (void*)fl.down, (void*)fl.scale);
+        GGML_ASSERT(fl.router != nullptr && "fuse3 router is null");
+        GGML_ASSERT(fl.gate != nullptr && "fuse3 gate is null");
+        GGML_ASSERT(fl.up != nullptr && "fuse3 up is null");
+        GGML_ASSERT(fl.down != nullptr && "fuse3 down is null");
+        GGML_ASSERT(fl.scale != nullptr && "fuse3 scale is null");
+        fprintf(stderr, "fuse3: layer %d, gate ne=[%lld, %lld, %lld], cur ne=[%lld, %lld]\n",
+                il, (long long)fl.gate->ne[0], (long long)fl.gate->ne[1], (long long)fl.gate->ne[2],
+                (long long)cur->ne[0], (long long)cur->ne[1]);
+
         // Router logits: cur @ router -> {n_tokens, n_exp}
         ggml_tensor * router_logits = ggml_mul_mat(ctx0, fl.router, cur);
         cb(router_logits, "fuse3.router_logits", il);
@@ -113,11 +124,13 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
         // sqrt(softplus(x)) > 0 always, so sum > 0, no epsilon needed
         ggml_tensor * scores_sum = ggml_sum_rows(ctx0, scores);
         scores = ggml_div(ctx0, scores, scores_sum);
+        fprintf(stderr, "fuse3: layer %d, scores computed, starting expert loop\n", il);
 
         // Compute all experts, weight by scores
         ggml_tensor * expert_sum = nullptr;
 
         for (int e = 0; e < n_exp; ++e) {
+            fprintf(stderr, "fuse3: layer %d, expert %d/%d\n", il, e, n_exp);
             // Extract expert e's weights via 2D views
             ggml_tensor * gate_e = ggml_view_2d(ctx0, fl.gate,
                 fl.gate->ne[0], fl.gate->ne[1],
