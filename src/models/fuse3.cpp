@@ -23,8 +23,14 @@ void llama_model_fuse3::load_arch_hparams(llama_model_loader & ml) {
     llama_model_lfm2::load_arch_hparams(ml);
 
     // Fuse3 expert hparams
+    // n_expert and n_expert_used are already loaded by the base class
+    // from fuse3.expert_count and fuse3.expert_used_count (if present).
+    // The export script writes expert_top_k instead of expert_used_count,
+    // so set it manually if not already loaded.
+    if (hparams.n_expert > 0 && hparams.n_expert_used == 0) {
+        hparams.n_expert_used = 8; // top_k_experts from the export script
+    }
     ml.get_key(LLM_KV_EXPERT_FEED_FORWARD_LENGTH, hparams.n_ff_exp);
-    ml.get_key(LLM_KV_EXPERT_USED_COUNT,          hparams.n_expert_used);
 
     // Per-layer expert counts (custom key)
     std::vector<int32_t> expert_counts;
