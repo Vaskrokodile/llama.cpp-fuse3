@@ -100,8 +100,12 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
         const auto & fl = g_fuse3_layers[il];
         const int n_exp = fl.n_experts;
 
+        // Cast to f32 for stable expert computation (softplus/sqrt/div need f32)
+        ggml_tensor * cur_f32 = ggml_cpy(ctx0, cur,
+            ggml_new_tensor_2d(ctx0, GGML_TYPE_F32, cur->ne[0], cur->ne[1]));
+
         // Router logits: cur @ router -> {n_tokens, n_exp}
-        ggml_tensor * router_logits = ggml_mul_mat(ctx0, fl.router, cur);
+        ggml_tensor * router_logits = ggml_mul_mat(ctx0, fl.router, cur_f32);
         cb(router_logits, "fuse3.router_logits", il);
 
         // sqrtsoftplus scoring: sqrt(softplus(x))
@@ -132,8 +136,8 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
                 fl.down->nb[1], e * fl.down->nb[2]);
 
             // SwiGLU: down(silu(gate(x)) * up(x))
-            ggml_tensor * gate_out = ggml_mul_mat(ctx0, gate_e, cur);
-            ggml_tensor * up_out   = ggml_mul_mat(ctx0, up_e, cur);
+            ggml_tensor * gate_out = ggml_mul_mat(ctx0, gate_e, cur_f32);
+            ggml_tensor * up_out   = ggml_mul_mat(ctx0, up_e, cur_f32);
             ggml_tensor * act      = ggml_mul(ctx0, ggml_silu(ctx0, gate_out), up_out);
 
             // Clamp (swiglu_limit = 10.0)
@@ -162,6 +166,10 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
         scale = ggml_repeat(ctx0, scale, expert_sum);
         ggml_tensor * expert_delta = ggml_mul(ctx0, expert_sum, scale);
         cb(expert_delta, "fuse3.expert_delta", il);
+
+        // Cast back to cur's type for residual add
+        expert_delta = ggml_cpy(ctx0, expert_delta,
+            ggml_new_tensor_2d(ctx0, cur->type, cur->ne[0], cur->ne[1]));
 
         // Add to residual
         return ggml_add(ctx0, cur, expert_delta);
