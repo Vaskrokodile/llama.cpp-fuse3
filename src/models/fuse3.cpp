@@ -158,8 +158,9 @@ llama_model_fuse3::graph<iswa>::graph(const llama_model & model, const llm_graph
         ggml_tensor * scale = ggml_softplus(ctx0, fl.scale);
         scale = ggml_clamp(ctx0, scale, 0.0f, 0.1f);
 
-        // expert_delta = scale * expert_sum
-        ggml_tensor * expert_delta = ggml_mul(ctx0, scale, expert_sum);
+        // expert_delta = scale * expert_sum (broadcast scalar scale)
+        scale = ggml_repeat(ctx0, scale, expert_sum);
+        ggml_tensor * expert_delta = ggml_mul(ctx0, expert_sum, scale);
         cb(expert_delta, "fuse3.expert_delta", il);
 
         // Add to residual
